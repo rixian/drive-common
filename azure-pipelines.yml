@@ -14,7 +14,7 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   BuildConfiguration: Release
   BuildPlatform: Any CPU
-  $19ab14948-4bfb-4029-a48b-761cdec15be3
+  codecov_token: 4dc9e7e2-6b01-4932-a180-847b52b43d35
   ci_feed: /e08c98c0-63d6-4dc6-80ca-944e4deaf3d2
 
 jobs:
