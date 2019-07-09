@@ -14,8 +14,8 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   BuildConfiguration: Release
   BuildPlatform: Any CPU
-  codecov_token: 4dc9e7e2-6b01-4932-a180-847b52b43d35 # Get a new one from https://codecov.io/
-  ci_feed: /a5a3bad0-e566-4c53-be83-6458be8d1653 # find guid used by Azure DevOps Artifacts for the feed
+  $19ab14948-4bfb-4029-a48b-761cdec15be3
+  ci_feed: /e08c98c0-63d6-4dc6-80ca-944e4deaf3d2
 
 jobs:
 - job: Windows
@@ -30,7 +30,6 @@ jobs:
     workingDirectory: src
 
   - template: azure-pipelines/dotnet.yml
-  - template: azure-pipelines/expand-template.yml
 
 - job: Linux
   pool:
@@ -38,7 +37,6 @@ jobs:
   steps:
   - template: azure-pipelines/install-dependencies.yml
   - template: azure-pipelines/dotnet.yml
-  - template: azure-pipelines/expand-template.yml
 
 - job: macOS
   pool:
@@ -46,7 +44,6 @@ jobs:
   steps:
   - template: azure-pipelines/install-dependencies.yml
   - template: azure-pipelines/dotnet.yml
-  - template: azure-pipelines/expand-template.yml
 
 - job: WrapUp
   dependsOn:
