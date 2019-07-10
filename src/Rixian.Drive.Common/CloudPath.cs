@@ -1,5 +1,5 @@
 // Copyright (c) Rixian. All rights reserved.
-// Licensed under the Apache License, Version 2.0 license. See LICENSE file in the project root for full license information.
+// Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
 
 namespace Rixian.Drive.Common
 {
@@ -8,47 +8,57 @@ namespace Rixian.Drive.Common
     using System.Linq;
     using System.Text.RegularExpressions;
 
-    public enum CloudPathType
-    {
-        None = 0,
-        Share,
-        Partition
-    }
-
+    /// <summary>
+    /// Manipulates strings that contain directory or file paths.
+    /// </summary>
     public sealed class CloudPath
     {
+        /// <summary>
+        /// Root path without partition information.
+        /// </summary>
         public static readonly string RelativeRoot = "/";
 
+        /// <summary>
+        /// Directory seperator used in the path.
+        /// </summary>
         public static readonly char DirectorySeparator = '/';
-        private static readonly string regexDirectorySeparator = $"\\{DirectorySeparator}";
 
-        internal static readonly char PartitionSeparator = ':';
-        private static readonly string regexPartitionSeparator = $"\\{PartitionSeparator}";
+        /// <summary>
+        /// Partition seperator used in path.
+        /// </summary>
+        public static readonly char PartitionSeparator = ':';
 
+        /// <summary>
+        /// Characters that are not valid in the path.
+        /// </summary>
         public static readonly char[] InvalidCharacters = new[] { '\\', ':', '?', '*', '[', ']' };
-        private static readonly string invalidRegexCharacters = InvalidCharacters.Select(c => $"\\{c}").Aggregate((l, r) => $"{l}{r}");
 
-        private static readonly string shareLabelName = "shareLabel";
-        private static readonly string partitionLabelName = "partitionLabel";
-        private static readonly string pathName = "path";
-        private static readonly string streamName = "stream";
+        /// <summary>
+        /// Regex used for validating and parsing paths.
+        /// </summary>
+        public static readonly string CloudUriRegex = $@"(?:^(?:{RegexDirectorySeparator}{RegexDirectorySeparator}(?<{ShareLabelName}>[^{RegexDirectorySeparator}{InvalidRegexCharacters}]+))|^(?:(?<{PartitionLabelName}>[^{RegexDirectorySeparator}{InvalidRegexCharacters}]+){RegexPartitionSeparator}))?(?<{PathName}>[^{InvalidRegexCharacters}]*)(?:\:(?<{StreamName}>[^{InvalidRegexCharacters}]+))?$";
 
-        // (?:^(?:\/\/(?<shareLabel>[^\/\\:\*\?\[\]]+))|^(?:(?<partitionLabel>[^\/\\:\*\?\[\]]+):))?(?<partitionPath>[^\\:\*\?\[\]]*)$
-        public static readonly string CloudUriRegex = $@"(?:^(?:{regexDirectorySeparator}{regexDirectorySeparator}(?<{shareLabelName}>[^{regexDirectorySeparator}{invalidRegexCharacters}]+))|^(?:(?<{partitionLabelName}>[^{regexDirectorySeparator}{invalidRegexCharacters}]+){regexPartitionSeparator}))?(?<{pathName}>[^{invalidRegexCharacters}]*)(?:\:(?<{streamName}>[^{invalidRegexCharacters}]+))?$";
+        /// <summary>
+        /// Default root path.
+        /// </summary>
         public static readonly CloudPath Root = new CloudPath("/");
 
-        public string Stream { get; }
+        private const string ShareLabelName = "shareLabel";
+        private const string PartitionLabelName = "partitionLabel";
+        private const string PathName = "path";
+        private const string StreamName = "stream";
 
-        public string Path { get; }
+        private static readonly string RegexDirectorySeparator = $"\\{DirectorySeparator}";
+        private static readonly string RegexPartitionSeparator = $"\\{PartitionSeparator}";
+        private static readonly string InvalidRegexCharacters = InvalidCharacters.Select(c => $"\\{c}").Aggregate((l, r) => $"{l}{r}");
 
-        public string Label { get; }
-
-        public CloudPathType Type { get; }
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CloudPath"/> class.
+        /// </summary>
+        /// <param name="path">The full or ralative path.</param>
         public CloudPath(string path)
         {
             (CloudPathType type, string label, string path, string stream) result = ParseInternal(path);
-
 
             if (string.IsNullOrWhiteSpace(result.label))
             {
@@ -57,14 +67,14 @@ namespace Rixian.Drive.Common
 
             if (string.IsNullOrWhiteSpace(result.path))
             {
-                throw new ArgumentException("Parameter must have a path", nameof(path));
+                throw new ArgumentException(Properties.Resources.PathNullExceptionMessage, nameof(path));
             }
 
             this.Type = result.type;
             this.Label = result.label?.Trim();
 
             result.path = result.path?.Trim();
-            if (!result.path.StartsWith("/"))
+            if (!result.path.StartsWith("/", StringComparison.OrdinalIgnoreCase))
             {
                 result.path = $"/{result.path}";
             }
@@ -73,6 +83,13 @@ namespace Rixian.Drive.Common
             this.Stream = result.stream;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CloudPath"/> class.
+        /// </summary>
+        /// <param name="type">The type of path.</param>
+        /// <param name="label">The name of the partition label.</param>
+        /// <param name="path">The path relative to the partition.</param>
+        /// <param name="stream">Optional. The name of the alternate stream.</param>
         public CloudPath(CloudPathType type, string label, string path, string stream)
         {
             if (string.IsNullOrWhiteSpace(label))
@@ -82,14 +99,14 @@ namespace Rixian.Drive.Common
 
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("Parameter must have a value", nameof(path));
+                throw new ArgumentException(Properties.Resources.PathNullExceptionMessage, nameof(path));
             }
 
             this.Type = type;
             this.Label = label?.Trim();
 
             path = path?.Trim();
-            if (!path.StartsWith("/"))
+            if (!path.StartsWith("/", StringComparison.OrdinalIgnoreCase))
             {
                 path = $"/{path}";
             }
@@ -98,79 +115,54 @@ namespace Rixian.Drive.Common
             this.Stream = stream;
         }
 
-        public override string ToString()
-        {
-            switch (this.Type)
-            {
-                case CloudPathType.Share:
-                    return $"//{this.Label}{this.Path}";
-                case CloudPathType.Partition:
-                    return $"{this.Label}:{this.Path}";
-                default:
-                    return this.Path;
-            }
-        }
+        /// <summary>
+        /// Gets the stream part of the path.
+        /// </summary>
+        public string Stream { get; }
 
-        private static (CloudPathType type, string label, string path, string stream) ParseInternal(string path)
-        {
-            path = path?.Trim()?.Replace('\\', '/');
+        /// <summary>
+        /// Gets the relative path.
+        /// </summary>
+        public string Path { get; }
 
-            Match match = Regex.Match(path, CloudUriRegex);
+        /// <summary>
+        /// Gets the partition label part of the path.
+        /// </summary>
+        public string Label { get; }
 
-            var matchedPath = match.Groups[pathName]?.Value;
-            if (string.IsNullOrWhiteSpace(matchedPath))
-            {
-                matchedPath = "/";
-            }
+        /// <summary>
+        /// Gets the path type.
+        /// </summary>
+        public CloudPathType Type { get; }
 
-            var matchedStream = match.Groups[streamName]?.Value;
-            if (string.IsNullOrWhiteSpace(matchedStream))
-            {
-                matchedStream = null;
-            }
-
-            var matchedLabel = match.Groups[partitionLabelName]?.Value;
-
-            if (string.IsNullOrWhiteSpace(matchedLabel))
-            {
-                matchedLabel = match.Groups[shareLabelName]?.Value;
-
-                if (string.IsNullOrWhiteSpace(matchedLabel))
-                {
-                    return (CloudPathType.None, null, matchedPath, matchedStream);
-                }
-
-                return (CloudPathType.Share, matchedLabel, matchedPath, matchedStream);
-            }
-            else
-            {
-                return (CloudPathType.Partition, matchedLabel, matchedPath, matchedStream);
-            }
-        }
-
+        /// <summary>
+        /// Parses the provided path as an instance of a <see cref="CloudPath"/>.
+        /// </summary>
+        /// <param name="path">The path to parse.</param>
+        /// <returns>The parsed <see cref="CloudPath"/>.</returns>
         public static CloudPath Parse(string path)
         {
             path = path?.Trim()?.Replace('\\', '/');
 
             Match match = Regex.Match(path, CloudUriRegex);
 
-            var matchedPath = match.Groups[pathName]?.Value;
+            var matchedPath = match.Groups[PathName]?.Value;
             if (string.IsNullOrWhiteSpace(matchedPath))
             {
                 matchedPath = "/";
             }
 
-            var matchedStream = match.Groups[streamName]?.Value;
+            var matchedStream = match.Groups[StreamName]?.Value;
             if (string.IsNullOrWhiteSpace(matchedStream))
             {
                 matchedStream = null;
             }
 
-            var matchedLabel = match.Groups[partitionLabelName]?.Value;
+            var matchedLabel = match.Groups[PartitionLabelName]?.Value;
 
             if (string.IsNullOrWhiteSpace(matchedLabel))
             {
-                matchedLabel = match.Groups[shareLabelName]?.Value;
+                matchedLabel = match.Groups[ShareLabelName]?.Value;
                 return new CloudPath(CloudPathType.Share, matchedLabel, matchedPath, matchedStream);
             }
             else
@@ -179,23 +171,26 @@ namespace Rixian.Drive.Common
             }
         }
 
+        /// <summary>
+        /// Normalizes the path, including hierarchies and relative paths.
+        /// </summary>
+        /// <param name="path">The path to normalize.</param>
+        /// <returns>The normalized path.</returns>
         public static string NormalizePath(string path)
         {
             (CloudPathType type, string label, string path, string stream) parsed = ParseInternal(path);
 
-            List<string> segments = GetPathSegments(parsed.path).Where(s => s != ".").ToList();
-
+            var segments = GetPathSegments(parsed.path).Where(s => s != ".").ToList();
 
             IEnumerable<(string s, int i)> indexedBacktrackSegments = segments.Select((s, i) => (s, i)).Where(t => t.s == "..").ToList();
 
-            int backtrackOffset = 0;
-            foreach ((string s, int i) segment in indexedBacktrackSegments)
+            var backtrackOffset = 0;
+            foreach ((var s, var i) in indexedBacktrackSegments)
             {
-                segments.RemoveAt(segment.i - backtrackOffset);
-                segments.RemoveAt(segment.i - 1 - backtrackOffset);
+                segments.RemoveAt(i - backtrackOffset);
+                segments.RemoveAt(i - 1 - backtrackOffset);
                 backtrackOffset = 2;
             }
-
 
             var normalizedPath = segments.Aggregate(string.Empty, (p, s) => p + DirectorySeparator + s);
 
@@ -207,23 +202,37 @@ namespace Rixian.Drive.Common
             return new CloudPath(parsed.type, parsed.label, normalizedPath, parsed.stream).ToString();
         }
 
-
-        public static string GetParent(string parentPath)
+        /// <summary>
+        /// Returns the path to the parent directory.
+        /// </summary>
+        /// <param name="path">The path to navigate.</param>
+        /// <returns>The path to the parent directory.</returns>
+        public static string GetParent(string path)
         {
-            if (parentPath == "/")
+            if (path == null)
             {
-                throw new InvalidOperationException("There is no parent of root.");
+                return null;
             }
 
-            parentPath = parentPath.TrimEnd('/');
-            int lookaheadCount = parentPath.Length;
+            if (path == "/")
+            {
+                throw new InvalidOperationException(Properties.Resources.NoParentOfRootExceptionMessage);
+            }
 
-            int index = parentPath.LastIndexOf(DirectorySeparator, lookaheadCount - 1, lookaheadCount);
-            //System.Diagnostics.Debug.Assert(index >= 0);
-            parentPath = parentPath.Remove(index + 1);
-            return parentPath;
+            path = path.TrimEnd('/');
+            var lookaheadCount = path.Length;
+
+            var index = path.LastIndexOf(DirectorySeparator, lookaheadCount - 1, lookaheadCount);
+
+            path = path.Remove(index + 1);
+            return path;
         }
 
+        /// <summary>
+        /// Normalizes the path to refer to a directory.
+        /// </summary>
+        /// <param name="path">The path to normalize.</param>
+        /// <returns>The normalized path.</returns>
         public static string NormalizeToDirectory(string path)
         {
             if (path == null)
@@ -244,6 +253,11 @@ namespace Rixian.Drive.Common
             return $"{path}{DirectorySeparator}";
         }
 
+        /// <summary>
+        /// Normalizes the path to refer to a file.
+        /// </summary>
+        /// <param name="path">The path to normalize.</param>
+        /// <returns>The normalized path.</returns>
         public static string NormalizeToFile(string path)
         {
             if (path == null)
@@ -259,6 +273,11 @@ namespace Rixian.Drive.Common
             return path.TrimEnd(DirectorySeparator);
         }
 
+        /// <summary>
+        /// Checks if the path if formatted as a directory path (trailing '/').
+        /// </summary>
+        /// <param name="path">The path to check.</param>
+        /// <returns>True if the path represents a directory, otherwise false.</returns>
         public static bool IsFormattedAsDirectory(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -274,11 +293,17 @@ namespace Rixian.Drive.Common
             return false;
         }
 
+        /// <summary>
+        /// Changes the extension of the file on the path.
+        /// </summary>
+        /// <param name="path">The path to modify.</param>
+        /// <param name="extension">The new extension.</param>
+        /// <returns>The modified path with the new extension.</returns>
         public static string ChangeExtension(string path, string extension)
         {
             /*
-             * On Windows-based desktop platforms, if path is null or an empty string (""), the path information is returned unmodified. 
-             * If extension is null, the returned string contains the specified path with its extension removed. 
+             * On Windows-based desktop platforms, if path is null or an empty string (""), the path information is returned unmodified.
+             * If extension is null, the returned string contains the specified path with its extension removed.
              * If path has no extension, and extension is not null, the returned path string contains extension appended to the end of path.
              */
 
@@ -308,15 +333,20 @@ namespace Rixian.Drive.Common
             return $"{pathWithoutExtension}{extension}";
         }
 
+        /// <summary>
+        /// Combines multiple path segments into a single path.
+        /// </summary>
+        /// <param name="paths">The path segments.</param>
+        /// <returns>The full path.</returns>
         public static string Combine(params string[] paths)
         {
             /*
              * paths should be an array of the parts of the path to combine. If the one of the subsequent paths is an absolute path, then the combine operation resets starting with that absolute path, discarding all previous combined paths.
-             * 
+             *
              * Zero-length strings are omitted from the combined path.
-             * 
+             *
              * The parameters are not parsed if they have white space.
-             * 
+             *
              * Not all invalid characters for directory and file names are interpreted as unacceptable by the Combine method, because you can use these characters for search wildcard characters. For example, while Path.Combine("c:\\", "*.txt") might be invalid if you were to create a file from it, it is valid as a search string. It is therefore successfully interpreted by the Combine method.
              */
 
@@ -335,16 +365,21 @@ namespace Rixian.Drive.Common
                 .Aggregate((l, r) => $"{l.TrimEnd(DirectorySeparator)}{DirectorySeparator}{r.TrimStart(DirectorySeparator)}");
         }
 
+        /// <summary>
+        /// Gets the path for the directory.
+        /// </summary>
+        /// <param name="path">The input path.</param>
+        /// <returns>The path to the directory.</returns>
         public static string GetDirectoryName(string path)
         {
             /*
              * Directory information for path, or null if path denotes a root directory or is null. Returns Empty if path does not contain directory information.
-             * 
-             * In most cases, the string returned by this method consists of all characters in the path up to but not including the last DirectorySeparatorChar or AltDirectorySeparatorChar. 
-             * If the path consists of a root directory, such as "c:\", null is returned. Note that this method does not support paths using "file:". 
+             *
+             * In most cases, the string returned by this method consists of all characters in the path up to but not including the last DirectorySeparatorChar or AltDirectorySeparatorChar.
+             * If the path consists of a root directory, such as "c:\", null is returned. Note that this method does not support paths using "file:".
              * Because the returned path does not include the DirectorySeparatorChar or AltDirectorySeparatorChar, passing the returned path back into the GetDirectoryName method will result
-             * in the truncation of one folder level per subsequent call on the result string. For example, passing the path "C:\Directory\SubDirectory\test.txt" into the GetDirectoryName 
-             * method will return "C:\Directory\SubDirectory". Passing that string, "C:\Directory\SubDirectory", into GetDirectoryName will result in "C:\Directory". 
+             * in the truncation of one folder level per subsequent call on the result string. For example, passing the path "C:\Directory\SubDirectory\test.txt" into the GetDirectoryName
+             * method will return "C:\Directory\SubDirectory". Passing that string, "C:\Directory\SubDirectory", into GetDirectoryName will result in "C:\Directory".
              */
 
             if (path == null)
@@ -361,13 +396,18 @@ namespace Rixian.Drive.Common
             return path.Substring(0, separatorIndex);
         }
 
+        /// <summary>
+        /// Gets the extension of the file this path represents.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The file extension.</returns>
         public static string GetExtension(string path)
         {
             /*
              * The extension of the specified path (including the period "."), or null, or Empty. If path is null, GetExtension(String) returns null. If path does not have extension information, GetExtension(String) returns Empty.
-             * 
+             *
              * The extension of path is obtained by searching path for a period (.), starting with the last character in path and continuing toward the start of path.
-             * If a period is found before a DirectorySeparatorChar or AltDirectorySeparatorChar character, the returned string contains the period and the characters after it; otherwise, Empty is returned. 
+             * If a period is found before a DirectorySeparatorChar or AltDirectorySeparatorChar character, the returned string contains the period and the characters after it; otherwise, Empty is returned.
              */
 
             if (path == null)
@@ -389,6 +429,11 @@ namespace Rixian.Drive.Common
             return path.Substring(periodIndex, path.Length - periodIndex);
         }
 
+        /// <summary>
+        /// Gets the name of the file and extension this path represents.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The file name and extension.</returns>
         public static string GetFileName(string path)
         {
             /*
@@ -414,10 +459,14 @@ namespace Rixian.Drive.Common
             return path.Substring(separatorIndex + 1, path.Length - separatorIndex - 1);
         }
 
+        /// <summary>
+        /// Gets the name of the file this path represents.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The file name.</returns>
         public static string GetFileNameWithoutExtension(string path)
         {
             // The string returned by GetFileName(String), minus the last period(.) and all characters following it.
-
             var fileName = GetFileName(path);
             if (fileName == null)
             {
@@ -438,60 +487,16 @@ namespace Rixian.Drive.Common
             return fileName.Substring(0, periodIndex);
         }
 
-        private static (string root, string body)? GetPathInfo(string path)
-        {
-            /*
-             * The root directory of path, or null if path is null, or an empty string if path does not contain root directory information.
-             * 
-             *  Possible patterns for the string returned by this method are as follows:
-
-                An empty string (path specified a relative path on the current drive or volume).
-
-                "" (path specified an absolute path on the current drive).
-
-                "X:" (path specified a relative path on a drive, where X represents a drive or volume letter).
-
-                "X:" (path specified an absolute path on a given drive).
-
-                "\\ComputerName\SharedFolder" (a UNC path).
-
-                "\?\C:" (a DOS device path, supported in .NET Core 1.1 and later versions and in .NET Framework 4.6.2 and later versions)
-
-             */
-
-            if (path == null)
-            {
-                return null;
-            }
-
-            path = path.Trim().Replace('\\', '/');
-
-            Match match = Regex.Match(path, CloudUriRegex);
-
-            var matchedPath = match.Groups[pathName]?.Value;
-            var matchedLabel = match.Groups[partitionLabelName]?.Value;
-
-            if (string.IsNullOrWhiteSpace(matchedLabel))
-            {
-                matchedLabel = match.Groups[shareLabelName]?.Value;
-                if (string.IsNullOrWhiteSpace(matchedLabel))
-                {
-                    return (string.Empty, matchedPath);
-                }
-
-                return (FormatShare(matchedLabel), matchedPath);
-            }
-            else
-            {
-                return (FormatPartition(matchedLabel), matchedPath);
-            }
-        }
-
+        /// <summary>
+        /// Gets the partition or share part of the path.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The path root.</returns>
         public static string GetPathRoot(string path)
         {
             /*
              * The root directory of path, or null if path is null, or an empty string if path does not contain root directory information.
-             * 
+             *
              *  Possible patterns for the string returned by this method are as follows:
 
                 An empty string (path specified a relative path on the current drive or volume).
@@ -518,6 +523,11 @@ namespace Rixian.Drive.Common
             return pathInfo?.root;
         }
 
+        /// <summary>
+        /// Gets the body part of the path.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The path body.</returns>
         public static string GetPathBody(string path)
         {
             if (path == null)
@@ -528,9 +538,13 @@ namespace Rixian.Drive.Common
             (string root, string body)? pathInfo = GetPathInfo(path);
 
             return pathInfo?.body;
-
         }
 
+        /// <summary>
+        /// Gets the path segments, determined by the directory seperator character.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The path segments.</returns>
         public static IReadOnlyList<string> GetPathSegments(string path)
         {
             if (path == null)
@@ -541,17 +555,18 @@ namespace Rixian.Drive.Common
             return path.Split(new[] { DirectorySeparator }, StringSplitOptions.RemoveEmptyEntries);
         }
 
-        private static string FormatShare(string label) => $"//{label}";
-
-        private static string FormatPartition(string label) => $"{label}:";
-
+        /// <summary>
+        /// Determines if the path has an extension.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>True if the path has an extension, otherwise false.</returns>
         public static bool HasExtension(string path)
         {
             /*
              * true if the characters that follow the last directory separator (\\ or /) or volume separator (:) in the path include a period (.) followed by one or more characters; otherwise, false.
-             * 
-             * Starting from the end of path, this method searches for a period (.) followed by at least one character. If this pattern is found before a DirectorySeparatorChar, 
-             * AltDirectorySeparatorChar, or VolumeSeparatorChar character is encountered, this method returns true. 
+             *
+             * Starting from the end of path, this method searches for a period (.) followed by at least one character. If this pattern is found before a DirectorySeparatorChar,
+             * AltDirectorySeparatorChar, or VolumeSeparatorChar character is encountered, this method returns true.
              */
 
             if (path == null)
@@ -579,17 +594,32 @@ namespace Rixian.Drive.Common
             return true;
         }
 
+        /// <summary>
+        /// Determines if the path starts at a root location. Either  '/' or a partition label.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>True if the path is rooted, otherwise false.</returns>
         public static bool IsPathRooted(string path)
         {
-            // starts with partirion, share, or slash == true
+            if (path == null)
+            {
+                return false;
+            }
+
+            // starts with partition, share, or slash == true
 
             /*
-             * The IsPathRooted method returns true if the first character is a directory separator character such as "\", or if the path starts with a drive letter and colon (:). 
-             * For example, it returns true for path strings such as "\\MyDir\\MyFile.txt", "C:\\MyDir", or "C:MyDir". It returns false for path strings such as "MyDir". 
+             * The IsPathRooted method returns true if the first character is a directory separator character such as "\", or if the path starts with a drive letter and colon (:).
+             * For example, it returns true for path strings such as "\\MyDir\\MyFile.txt", "C:\\MyDir", or "C:MyDir". It returns false for path strings such as "MyDir".
              */
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Determines if the path is the root, i.e. the '/' character.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>True if the path is root, otherwise false.</returns>
         public static bool IsRoot(string path)
         {
             if (path == null)
@@ -609,5 +639,112 @@ namespace Rixian.Drive.Common
 
             return false;
         }
+
+        /// <summary>
+        /// Returns the full path as a string.
+        /// </summary>
+        /// <returns>The full path.</returns>
+        public override string ToString()
+        {
+            switch (this.Type)
+            {
+                case CloudPathType.Share:
+                    return $"//{this.Label}{this.Path}";
+                case CloudPathType.Partition:
+                    return $"{this.Label}:{this.Path}";
+                default:
+                    return this.Path;
+            }
+        }
+
+        private static (CloudPathType type, string label, string path, string stream) ParseInternal(string path)
+        {
+            path = path?.Trim()?.Replace('\\', '/');
+
+            Match match = Regex.Match(path, CloudUriRegex);
+
+            var matchedPath = match.Groups[PathName]?.Value;
+            if (string.IsNullOrWhiteSpace(matchedPath))
+            {
+                matchedPath = "/";
+            }
+
+            var matchedStream = match.Groups[StreamName]?.Value;
+            if (string.IsNullOrWhiteSpace(matchedStream))
+            {
+                matchedStream = null;
+            }
+
+            var matchedLabel = match.Groups[PartitionLabelName]?.Value;
+
+            if (string.IsNullOrWhiteSpace(matchedLabel))
+            {
+                matchedLabel = match.Groups[ShareLabelName]?.Value;
+
+                if (string.IsNullOrWhiteSpace(matchedLabel))
+                {
+                    return (CloudPathType.None, null, matchedPath, matchedStream);
+                }
+
+                return (CloudPathType.Share, matchedLabel, matchedPath, matchedStream);
+            }
+            else
+            {
+                return (CloudPathType.Partition, matchedLabel, matchedPath, matchedStream);
+            }
+        }
+
+        private static (string root, string body)? GetPathInfo(string path)
+        {
+            /*
+             * The root directory of path, or null if path is null, or an empty string if path does not contain root directory information.
+             *
+             *  Possible patterns for the string returned by this method are as follows:
+
+                An empty string (path specified a relative path on the current drive or volume).
+
+                "" (path specified an absolute path on the current drive).
+
+                "X:" (path specified a relative path on a drive, where X represents a drive or volume letter).
+
+                "X:" (path specified an absolute path on a given drive).
+
+                "\\ComputerName\SharedFolder" (a UNC path).
+
+                "\?\C:" (a DOS device path, supported in .NET Core 1.1 and later versions and in .NET Framework 4.6.2 and later versions)
+
+             */
+
+            if (path == null)
+            {
+                return null;
+            }
+
+            path = path.Trim().Replace('\\', '/');
+
+            Match match = Regex.Match(path, CloudUriRegex);
+
+            var matchedPath = match.Groups[PathName]?.Value;
+            var matchedLabel = match.Groups[PartitionLabelName]?.Value;
+
+            if (string.IsNullOrWhiteSpace(matchedLabel))
+            {
+                matchedLabel = match.Groups[ShareLabelName]?.Value;
+                if (string.IsNullOrWhiteSpace(matchedLabel))
+                {
+                    return (string.Empty, matchedPath);
+                }
+
+                return (FormatShare(matchedLabel), matchedPath);
+            }
+            else
+            {
+                return (FormatPartition(matchedLabel), matchedPath);
+            }
+        }
+
+        private static string FormatShare(string label) => $"//{label}";
+
+        private static string FormatPartition(string label) => $"{label}:";
     }
 }
