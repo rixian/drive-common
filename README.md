@@ -1,6 +1,6 @@
-# Your Library
+# Rixian.Drive.Common
 
-***An awesome template for your awesome library***
+***Supporting code for Rixian Drive components***
 
 [![NuGet package](https://img.shields.io/nuget/v/Rixian.Drive.Common.svg)](https://nuget.org/packages/Rixian.Drive.Common)
 [![codecov](https://codecov.io/gh/rixian/drive-common/branch/master/graph/badge.svg)](https://codecov.io/gh/rixian/drive-common)
