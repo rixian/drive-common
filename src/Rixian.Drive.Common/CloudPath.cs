@@ -33,16 +33,6 @@ namespace Rixian.Drive.Common
         /// </summary>
         public static readonly char[] InvalidCharacters = new[] { '\\', ':', '?', '*', '[', ']' };
 
-        /// <summary>
-        /// Regex used for validating and parsing paths.
-        /// </summary>
-        public static readonly string CloudUriRegex = $@"(?:^(?:{RegexDirectorySeparator}{RegexDirectorySeparator}(?<{ShareLabelName}>[^{RegexDirectorySeparator}{InvalidRegexCharacters}]+))|^(?:(?<{PartitionLabelName}>[^{RegexDirectorySeparator}{InvalidRegexCharacters}]+){RegexPartitionSeparator}))?(?<{PathName}>[^{InvalidRegexCharacters}]*)(?:\:(?<{StreamName}>[^{InvalidRegexCharacters}]+))?$";
-
-        /// <summary>
-        /// Default root path.
-        /// </summary>
-        public static readonly CloudPath Root = new CloudPath("/");
-
         private const string ShareLabelName = "shareLabel";
         private const string PartitionLabelName = "partitionLabel";
         private const string PathName = "path";
@@ -51,6 +41,7 @@ namespace Rixian.Drive.Common
         private static readonly string RegexDirectorySeparator = $"\\{DirectorySeparator}";
         private static readonly string RegexPartitionSeparator = $"\\{PartitionSeparator}";
         private static readonly string InvalidRegexCharacters = InvalidCharacters.Select(c => $"\\{c}").Aggregate((l, r) => $"{l}{r}");
+        private static readonly string CloudPathRegexString = $@"(?:^(?:{RegexDirectorySeparator}{RegexDirectorySeparator}(?<{ShareLabelName}>[^{RegexDirectorySeparator}{InvalidRegexCharacters}]+))|^(?:(?<{PartitionLabelName}>[^{RegexDirectorySeparator}{InvalidRegexCharacters}]+){RegexPartitionSeparator}))?(?<{PathName}>[^{InvalidRegexCharacters}]*)(?:\:(?<{StreamName}>[^{InvalidRegexCharacters}]+))?$";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CloudPath"/> class.
@@ -116,6 +107,28 @@ namespace Rixian.Drive.Common
         }
 
         /// <summary>
+        /// Gets the regex used for validating and parsing paths.
+        /// </summary>
+        public static string CloudPathRegex
+        {
+            get
+            {
+                return CloudPathRegexString;
+            }
+        }
+
+        /// <summary>
+        /// Gets the default root path object.
+        /// </summary>
+        public static CloudPath Root
+        {
+            get
+            {
+                return new CloudPath("/");
+            }
+        }
+
+        /// <summary>
         /// Gets the stream part of the path.
         /// </summary>
         public string Stream { get; }
@@ -144,7 +157,7 @@ namespace Rixian.Drive.Common
         {
             path = path?.Trim()?.Replace('\\', '/');
 
-            Match match = Regex.Match(path, CloudUriRegex);
+            Match match = Regex.Match(path, CloudPathRegex);
 
             var matchedPath = match.Groups[PathName]?.Value;
             if (string.IsNullOrWhiteSpace(matchedPath))
@@ -661,7 +674,7 @@ namespace Rixian.Drive.Common
         {
             path = path?.Trim()?.Replace('\\', '/');
 
-            Match match = Regex.Match(path, CloudUriRegex);
+            Match match = Regex.Match(path, CloudPathRegex);
 
             var matchedPath = match.Groups[PathName]?.Value;
             if (string.IsNullOrWhiteSpace(matchedPath))
@@ -722,7 +735,7 @@ namespace Rixian.Drive.Common
 
             path = path.Trim().Replace('\\', '/');
 
-            Match match = Regex.Match(path, CloudUriRegex);
+            Match match = Regex.Match(path, CloudPathRegex);
 
             var matchedPath = match.Groups[PathName]?.Value;
             var matchedLabel = match.Groups[PartitionLabelName]?.Value;
