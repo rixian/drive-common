@@ -3,6 +3,7 @@
 ***Supporting code for Rixian Drive components***
 
 [![NuGet package](https://img.shields.io/nuget/v/Rixian.Drive.Common.svg)](https://nuget.org/packages/Rixian.Drive.Common)
+[![Build Status](https://dev.azure.com/rixian/Cloud%20Platform/_apis/build/status/rixian.drive-common?branchName=master)](https://dev.azure.com/rixian/Cloud%20Platform/_build/latest?definitionId=85&branchName=master)
 [![codecov](https://codecov.io/gh/rixian/drive-common/branch/master/graph/badge.svg)](https://codecov.io/gh/rixian/drive-common)
 
 ## Features

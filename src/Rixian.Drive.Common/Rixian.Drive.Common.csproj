@@ -6,9 +6,6 @@
     <NeutralLanguage>en-US</NeutralLanguage>
 
     <Description>Supporting library for other Rixian Drive components.</Description>
-    <Copyright>© Rixian LLC. All rights reserved.</Copyright>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageIconUrl>https://storagerixiannet.blob.core.windows.net/public/nuget/icons/nuget-rixian-256.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>
