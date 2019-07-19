@@ -700,6 +700,11 @@ namespace Rixian.Drive.Common
             return this.ToString(true);
         }
 
+        /// <summary>
+        /// Returns the full path as a string, optionally including the stream name.
+        /// </summary>
+        /// <param name="includeStream">True to include the stream name, otherwise false.</param>
+        /// <returns>The path string.</returns>
         public string ToString(bool includeStream)
         {
             var stream = includeStream && !string.IsNullOrWhiteSpace(this.Stream) ? $":{this.Stream}" : null;
