@@ -69,6 +69,41 @@ public class CloudPathTests
     }
 
     [Theory]
+    [InlineData(@"\foo\bar.txt", "/foo/bar.txt")]
+    [InlineData(@"   /foo/bar.txt   ", "/foo/bar.txt")]
+    [InlineData(@"\foo\bar.txt:abcd", "/foo/bar.txt")]
+    [InlineData(@"   /foo/bar.txt:abcd   ", "/foo/bar.txt")]
+    [InlineData(@"C:\foo\bar.txt", "C:/foo/bar.txt")]
+    [InlineData(@"C:\foo\bar.txt:abcd", "C:/foo/bar.txt")]
+    [InlineData(@"\\QQQ\foo\bar.txt", "//QQQ/foo/bar.txt")]
+    [InlineData(@"\\QQQ\foo\bar.txt:abcd", "//QQQ/foo/bar.txt")]
+    public void ToString_NoStream(string fullPath, string expectedPath)
+    {
+        CloudPath path = fullPath;
+        var cleanPath = path.ToString(false);
+        cleanPath.Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(@"\foo\bar.txt", "/foo/bar.txt")]
+    [InlineData(@"   /foo/bar.txt   ", "/foo/bar.txt")]
+    [InlineData(@"\foo\bar.txt:abcd", "/foo/bar.txt:abcd")]
+    [InlineData(@"   /foo/bar.txt:abcd   ", "/foo/bar.txt:abcd")]
+    [InlineData(@"C:\foo\bar.txt", "C:/foo/bar.txt")]
+    [InlineData(@"C:\foo\bar.txt:abcd", "C:/foo/bar.txt:abcd")]
+    [InlineData(@"\\QQQ\foo\bar.txt", "//QQQ/foo/bar.txt")]
+    [InlineData(@"\\QQQ\foo\bar.txt:abcd", "//QQQ/foo/bar.txt:abcd")]
+    public void ToString_WithStream(string fullPath, string expectedPath)
+    {
+        CloudPath path = fullPath;
+        var cleanPath = path.ToString(true);
+        cleanPath.Should().Be(expectedPath);
+
+        var cleanPath2 = path.ToString();
+        cleanPath2.Should().Be(expectedPath);
+    }
+
+    [Theory]
     [InlineData(@"/foo/bar.txt", "/foo/bar.txt")]
     [InlineData(@"/foo/../bar.txt", "/bar.txt")]
     [InlineData(@"/foo/./bar.txt", "/foo/bar.txt")]
@@ -82,6 +117,22 @@ public class CloudPathTests
         var pathInfo = CloudPath.NormalizePath(fullPath);
         pathInfo.Should().NotBeNull();
         pathInfo.Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(@"/foo/bar.txt", "/foo/bar.txt")]
+    [InlineData(@"/foo/../bar.txt", "/bar.txt")]
+    [InlineData(@"/foo/./bar.txt", "/foo/bar.txt")]
+    [InlineData(@"/foo/./././././bar.txt", "/foo/bar.txt")]
+    [InlineData(@"/foo/", "/foo/")]
+    [InlineData(@"/foo/../bar/", "/bar/")]
+    [InlineData(@"/foo/./bar/", "/foo/bar/")]
+    [InlineData(@"/foo/./././././bar/", "/foo/bar/")]
+    public void Implicit_NormalizePath(string fullPath, string expectedPath)
+    {
+        CloudPath pathInfo = fullPath;
+        pathInfo.Should().NotBeNull();
+        pathInfo.ToString().Should().Be(expectedPath);
     }
 
     [Theory]

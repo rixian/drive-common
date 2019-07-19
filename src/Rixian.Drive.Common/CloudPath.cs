@@ -231,24 +231,7 @@ namespace Rixian.Drive.Common
         {
             (CloudPathType type, string label, string path, string stream) parsed = ParseInternal(path);
 
-            var segments = GetPathSegments(parsed.path).Where(s => s != ".").ToList();
-
-            IEnumerable<(string s, int i)> indexedBacktrackSegments = segments.Select((s, i) => (s, i)).Where(t => t.s == "..").ToList();
-
-            var backtrackOffset = 0;
-            foreach ((var s, var i) in indexedBacktrackSegments)
-            {
-                segments.RemoveAt(i - backtrackOffset);
-                segments.RemoveAt(i - 1 - backtrackOffset);
-                backtrackOffset = 2;
-            }
-
-            var normalizedPath = segments.Aggregate(string.Empty, (p, s) => p + DirectorySeparator + s);
-
-            if (IsFormattedAsDirectory(parsed.path))
-            {
-                normalizedPath += DirectorySeparator;
-            }
+            var normalizedPath = NormalizePathInternal(parsed.path);
 
             return new CloudPath(parsed.type, parsed.label, normalizedPath, parsed.stream).ToString();
         }
@@ -714,7 +697,12 @@ namespace Rixian.Drive.Common
         /// <returns>The full path.</returns>
         public override string ToString()
         {
-            var stream = !string.IsNullOrWhiteSpace(this.Stream) ? $":{this.Stream}" : null;
+            return this.ToString(true);
+        }
+
+        public string ToString(bool includeStream)
+        {
+            var stream = includeStream && !string.IsNullOrWhiteSpace(this.Stream) ? $":{this.Stream}" : null;
             switch (this.Type)
             {
                 case CloudPathType.Share:
@@ -737,6 +725,8 @@ namespace Rixian.Drive.Common
             {
                 matchedPath = "/";
             }
+
+            matchedPath = NormalizePathInternal(matchedPath);
 
             var matchedStream = match.Groups[StreamName]?.Value;
             if (string.IsNullOrWhiteSpace(matchedStream))
@@ -810,6 +800,30 @@ namespace Rixian.Drive.Common
             {
                 return (matchedLabel, FormatPartition(matchedLabel), matchedPath);
             }
+        }
+
+        private static string NormalizePathInternal(string path)
+        {
+            var segments = GetPathSegments(path).Where(s => s != ".").ToList();
+
+            IEnumerable<(string s, int i)> indexedBacktrackSegments = segments.Select((s, i) => (s, i)).Where(t => t.s == "..").ToList();
+
+            var backtrackOffset = 0;
+            foreach ((var s, var i) in indexedBacktrackSegments)
+            {
+                segments.RemoveAt(i - backtrackOffset);
+                segments.RemoveAt(i - 1 - backtrackOffset);
+                backtrackOffset = 2;
+            }
+
+            var normalizedPath = segments.Aggregate(string.Empty, (p, s) => p + DirectorySeparator + s);
+
+            if (IsFormattedAsDirectory(path))
+            {
+                normalizedPath += DirectorySeparator;
+            }
+
+            return normalizedPath;
         }
 
         private static string FormatShare(string label) => $"//{label}";
