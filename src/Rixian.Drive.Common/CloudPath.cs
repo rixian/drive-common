@@ -149,6 +149,44 @@ namespace Rixian.Drive.Common
         public CloudPathType Type { get; }
 
         /// <summary>
+        /// Converts a <see cref="CloudPath"/> to a string.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        public static implicit operator CloudPath(string input)
+        {
+            if (input == null)
+            {
+                return null;
+            }
+
+            return new CloudPath(input);
+        }
+
+        /// <summary>
+        /// Converts a <see cref="CloudPath"/> to a string.
+        /// </summary>
+        /// <param name="input">The input <see cref="CloudPath"/>.</param>
+        public static implicit operator string(CloudPath input)
+        {
+            return input?.ToString();
+        }
+
+        /// <summary>
+        /// Converts a <see cref="CloudPath"/> to a string.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <returns>The <see cref="CloudPath"/> or null.</returns>
+        public static CloudPath FromString(string input)
+        {
+            if (input == null)
+            {
+                return null;
+            }
+
+            return new CloudPath(input);
+        }
+
+        /// <summary>
         /// Parses the provided path as an instance of a <see cref="CloudPath"/>.
         /// </summary>
         /// <param name="path">The path to parse.</param>
@@ -531,7 +569,7 @@ namespace Rixian.Drive.Common
                 return null;
             }
 
-            (string root, string body)? pathInfo = GetPathInfo(path);
+            (string label, string root, string body)? pathInfo = GetPathInfo(path);
 
             return pathInfo?.root;
         }
@@ -548,9 +586,26 @@ namespace Rixian.Drive.Common
                 return null;
             }
 
-            (string root, string body)? pathInfo = GetPathInfo(path);
+            (string label, string root, string body)? pathInfo = GetPathInfo(path);
 
             return pathInfo?.body;
+        }
+
+        /// <summary>
+        /// Gets the label part of the path.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The path label.</returns>
+        public static string GetPathLabel(string path)
+        {
+            if (path == null)
+            {
+                return null;
+            }
+
+            (string label, string root, string body)? pathInfo = GetPathInfo(path);
+
+            return pathInfo?.label;
         }
 
         /// <summary>
@@ -640,7 +695,7 @@ namespace Rixian.Drive.Common
                 throw new ArgumentNullException(nameof(path));
             }
 
-            (string root, string body)? pathInfo = GetPathInfo(path);
+            (string label, string root, string body)? pathInfo = GetPathInfo(path);
 
             var body = pathInfo?.body;
 
@@ -659,14 +714,15 @@ namespace Rixian.Drive.Common
         /// <returns>The full path.</returns>
         public override string ToString()
         {
+            var stream = !string.IsNullOrWhiteSpace(this.Stream) ? $":{this.Stream}" : null;
             switch (this.Type)
             {
                 case CloudPathType.Share:
-                    return $"//{this.Label}{this.Path}";
+                    return $"//{this.Label}{this.Path}{stream}";
                 case CloudPathType.Partition:
-                    return $"{this.Label}:{this.Path}";
+                    return $"{this.Label}:{this.Path}{stream}";
                 default:
-                    return this.Path;
+                    return $"{this.Path}{stream}";
             }
         }
 
@@ -707,7 +763,7 @@ namespace Rixian.Drive.Common
             }
         }
 
-        private static (string root, string body)? GetPathInfo(string path)
+        private static (string label, string root, string body)? GetPathInfo(string path)
         {
             /*
              * The root directory of path, or null if path is null, or an empty string if path does not contain root directory information.
@@ -745,14 +801,14 @@ namespace Rixian.Drive.Common
                 matchedLabel = match.Groups[ShareLabelName]?.Value;
                 if (string.IsNullOrWhiteSpace(matchedLabel))
                 {
-                    return (string.Empty, matchedPath);
+                    return (string.Empty, string.Empty, matchedPath);
                 }
 
-                return (FormatShare(matchedLabel), matchedPath);
+                return (matchedLabel, FormatShare(matchedLabel), matchedPath);
             }
             else
             {
-                return (FormatPartition(matchedLabel), matchedPath);
+                return (matchedLabel, FormatPartition(matchedLabel), matchedPath);
             }
         }
 
