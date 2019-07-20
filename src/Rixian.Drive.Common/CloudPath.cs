@@ -170,6 +170,17 @@ namespace Rixian.Drive.Common
         }
 
         /// <summary>
+        /// Gets a value indicating whether this path represents a file or not.
+        /// </summary>
+        public bool IsFilePath
+        {
+            get
+            {
+                return !this.IsDirectoryPath;
+            }
+        }
+
+        /// <summary>
         /// Gets a value indicating whether this path is the root or not, i.e. the '/' character.
         /// </summary>
         public bool IsRootPath

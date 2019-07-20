@@ -83,10 +83,31 @@ public class CloudPathTests
     [InlineData(@"/foo", false)]
     [InlineData(@"/foo/", true)]
     [InlineData(@"/foo/bar.txt", false)]
-    public void IsDirectory(string fullPath, bool expectValue)
+    public void IsDirectoryPath(string fullPath, bool expectValue)
     {
         CloudPath path = fullPath;
         path.IsDirectoryPath.Should().Be(expectValue);
+    }
+
+    [Theory]
+    [InlineData(@"C:", false)]
+    [InlineData(@"C:/", false)]
+    [InlineData(@"C:/foo", true)]
+    [InlineData(@"C:/foo/", false)]
+    [InlineData(@"C:/foo/bar.txt", true)]
+    [InlineData(@"//share", false)]
+    [InlineData(@"//share/", false)]
+    [InlineData(@"//share/foo", true)]
+    [InlineData(@"//share/foo/", false)]
+    [InlineData(@"//share/foo/bar.txt", true)]
+    [InlineData(@"/", false)]
+    [InlineData(@"/foo", true)]
+    [InlineData(@"/foo/", false)]
+    [InlineData(@"/foo/bar.txt", true)]
+    public void IsFilePath(string fullPath, bool expectValue)
+    {
+        CloudPath path = fullPath;
+        path.IsFilePath.Should().Be(expectValue);
     }
 
     [Theory]
