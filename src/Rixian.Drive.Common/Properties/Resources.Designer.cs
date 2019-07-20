@@ -61,6 +61,15 @@ namespace Rixian.Drive.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to convert a CloudPath with a file stream into a directory path..
+        /// </summary>
+        internal static string FilePathWithStreamToDirectoryPathConversionExceptionMessage {
+            get {
+                return ResourceManager.GetString("FilePathWithStreamToDirectoryPathConversionExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no parent of root..
         /// </summary>
         internal static string NoParentOfRootExceptionMessage {
@@ -75,6 +84,15 @@ namespace Rixian.Drive.Common.Properties {
         internal static string PathNullExceptionMessage {
             get {
                 return ResourceManager.GetString("PathNullExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to convert a root CloudPath to a file path..
+        /// </summary>
+        internal static string RootDirectoryPathToFilePathConversionExceptionMessage {
+            get {
+                return ResourceManager.GetString("RootDirectoryPathToFilePathConversionExceptionMessage", resourceCulture);
             }
         }
     }

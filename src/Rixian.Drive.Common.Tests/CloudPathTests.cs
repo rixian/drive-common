@@ -69,6 +69,91 @@ public class CloudPathTests
     }
 
     [Theory]
+    [InlineData(@"C:", true)]
+    [InlineData(@"C:/", true)]
+    [InlineData(@"C:/foo", false)]
+    [InlineData(@"C:/foo/", true)]
+    [InlineData(@"C:/foo/bar.txt", false)]
+    [InlineData(@"//share", true)]
+    [InlineData(@"//share/", true)]
+    [InlineData(@"//share/foo", false)]
+    [InlineData(@"//share/foo/", true)]
+    [InlineData(@"//share/foo/bar.txt", false)]
+    [InlineData(@"/", true)]
+    [InlineData(@"/foo", false)]
+    [InlineData(@"/foo/", true)]
+    [InlineData(@"/foo/bar.txt", false)]
+    public void IsDirectory(string fullPath, bool expectValue)
+    {
+        CloudPath path = fullPath;
+        path.IsDirectoryPath.Should().Be(expectValue);
+    }
+
+    [Theory]
+    [InlineData(@"C:")]
+    [InlineData(@"C:/")]
+    [InlineData(@"C:/foo")]
+    [InlineData(@"C:/foo/")]
+    [InlineData(@"C:/foo/bar.txt")]
+    [InlineData(@"//share")]
+    [InlineData(@"//share/")]
+    [InlineData(@"//share/foo")]
+    [InlineData(@"//share/foo/")]
+    [InlineData(@"//share/foo/bar.txt")]
+    [InlineData(@"/")]
+    [InlineData(@"/foo")]
+    [InlineData(@"/foo/")]
+    [InlineData(@"/foo/bar.txt")]
+    public void FormatAsDirectory(string fullPath)
+    {
+        CloudPath path = fullPath;
+        CloudPath directoryPath = path.FormatAsDirectory();
+        directoryPath.IsDirectoryPath.Should().Be(true);
+    }
+
+    [Theory]
+    [InlineData(@"C:/foo:abcd")]
+    [InlineData(@"C:/foo/bar.txt:abcd")]
+    [InlineData(@"//share/foo:abcd")]
+    [InlineData(@"//share/foo/bar.txt:abcd")]
+    [InlineData(@"/foo:abcd")]
+    [InlineData(@"/foo/bar.txt:abcd")]
+    public void FormatAsDirectory_Stream_Exception(string fullPath)
+    {
+        CloudPath path = fullPath;
+        Assert.Throws<InvalidOperationException>(() => path.FormatAsDirectory());
+    }
+
+    [Theory]
+    [InlineData(@"C:/foo")]
+    [InlineData(@"C:/foo/")]
+    [InlineData(@"C:/foo/bar.txt")]
+    [InlineData(@"//share/foo")]
+    [InlineData(@"//share/foo/")]
+    [InlineData(@"//share/foo/bar.txt")]
+    [InlineData(@"/foo")]
+    [InlineData(@"/foo/")]
+    [InlineData(@"/foo/bar.txt")]
+    public void FormatAsFile(string fullPath)
+    {
+        CloudPath path = fullPath;
+        CloudPath directoryPath = path.FormatAsFile();
+        directoryPath.IsDirectoryPath.Should().Be(false);
+    }
+
+    [Theory]
+    [InlineData(@"C:")]
+    [InlineData(@"C:/")]
+    [InlineData(@"//share")]
+    [InlineData(@"//share/")]
+    [InlineData(@"/")]
+    public void FormatAsFile_RootPath_Exception(string fullPath)
+    {
+        CloudPath path = fullPath;
+        Assert.Throws<InvalidOperationException>(() => path.FormatAsFile());
+    }
+
+    [Theory]
     [InlineData(@"\foo\bar.txt", "/foo/bar.txt")]
     [InlineData(@"   /foo/bar.txt   ", "/foo/bar.txt")]
     [InlineData(@"\foo\bar.txt:abcd", "/foo/bar.txt")]

@@ -149,6 +149,43 @@ namespace Rixian.Drive.Common
         public CloudPathType Type { get; }
 
         /// <summary>
+        /// Gets a value indicating whether this path represents a directory or not.
+        /// </summary>
+        public bool IsDirectoryPath
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(this.Path))
+                {
+                    return false;
+                }
+
+                if (this.Path.LastIndexOf(DirectorySeparator) == this.Path.Length - 1)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether this path is the root or not, i.e. the '/' character.
+        /// </summary>
+        public bool IsRootPath
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(this.Path) || this.Path == "/")
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Converts a <see cref="CloudPath"/> to a string.
         /// </summary>
         /// <param name="input">The input string.</param>
@@ -716,6 +753,46 @@ namespace Rixian.Drive.Common
                     return $"{this.Label}:{this.Path}{stream}";
                 default:
                     return $"{this.Path}{stream}";
+            }
+        }
+
+        /// <summary>
+        /// Returns a new <see cref="CloudPath"/> formatted as a directory.
+        /// </summary>
+        /// <returns>A <see cref="CloudPath"/> formatted as a directory.</returns>
+        public CloudPath FormatAsDirectory()
+        {
+            if (this.IsDirectoryPath)
+            {
+                return this;
+            }
+            else if (!string.IsNullOrWhiteSpace(this.Stream))
+            {
+                throw new InvalidOperationException(Properties.Resources.FilePathWithStreamToDirectoryPathConversionExceptionMessage);
+            }
+            else
+            {
+                return new CloudPath(this.Type, this.Label, this.Path + DirectorySeparator, this.Stream);
+            }
+        }
+
+        /// <summary>
+        /// Returns a new <see cref="CloudPath"/> formatted as a directory.
+        /// </summary>
+        /// <returns>A <see cref="CloudPath"/> formatted as a directory.</returns>
+        public CloudPath FormatAsFile()
+        {
+            if (!this.IsDirectoryPath)
+            {
+                return this;
+            }
+            else if (this.IsRootPath)
+            {
+                throw new InvalidOperationException(Properties.Resources.RootDirectoryPathToFilePathConversionExceptionMessage);
+            }
+            else
+            {
+                return new CloudPath(this.Type, this.Label, this.Path.TrimEnd(DirectorySeparator), this.Stream);
             }
         }
 

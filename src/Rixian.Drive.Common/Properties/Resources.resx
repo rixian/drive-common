@@ -117,10 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="FilePathWithStreamToDirectoryPathConversionExceptionMessage" xml:space="preserve">
+    <value>Unable to convert a CloudPath with a file stream into a directory path.</value>
+  </data>
   <data name="NoParentOfRootExceptionMessage" xml:space="preserve">
     <value>There is no parent of root.</value>
   </data>
   <data name="PathNullExceptionMessage" xml:space="preserve">
     <value>The path must not be null.</value>
+  </data>
+  <data name="RootDirectoryPathToFilePathConversionExceptionMessage" xml:space="preserve">
+    <value>Unable to convert a root CloudPath to a file path.</value>
   </data>
 </root>
