@@ -807,6 +807,21 @@ namespace Rixian.Drive.Common
             }
         }
 
+        /// <summary>
+        /// Creates a new instance of a CloudPath that contains a stream name.
+        /// </summary>
+        /// <param name="stream">The stream name.</param>
+        /// <returns>The existing cloud path with the stream name.</returns>
+        public CloudPath WithStream(string stream)
+        {
+            if (!string.IsNullOrWhiteSpace(this.Stream))
+            {
+                throw new InvalidOperationException(Properties.Resources.PathAlreadyConatinsStreamExceptionMessage);
+            }
+
+            return new CloudPath(this.Type, this.Label, this.Path, stream);
+        }
+
         private static (CloudPathType type, string label, string path, string stream) ParseInternal(string path)
         {
             path = path?.Trim()?.Replace('\\', '/');

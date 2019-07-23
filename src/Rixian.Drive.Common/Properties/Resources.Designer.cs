@@ -79,6 +79,15 @@ namespace Rixian.Drive.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to add a stream to a path that already contains a stream..
+        /// </summary>
+        internal static string PathAlreadyConatinsStreamExceptionMessage {
+            get {
+                return ResourceManager.GetString("PathAlreadyConatinsStreamExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The path must not be null..
         /// </summary>
         internal static string PathNullExceptionMessage {
