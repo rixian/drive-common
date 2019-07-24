@@ -11,7 +11,7 @@ namespace Rixian.Drive.Common
     /// <summary>
     /// Manipulates strings that contain directory or file paths.
     /// </summary>
-    public sealed class CloudPath
+    public sealed class CloudPath : IEquatable<CloudPath>, IEquatable<string>
     {
         /// <summary>
         /// Root path without partition information.
@@ -820,6 +820,74 @@ namespace Rixian.Drive.Common
             }
 
             return new CloudPath(this.Type, this.Label, this.Path, stream);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(CloudPath other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return
+                this.Type == other.Type &&
+                string.Equals(this.Path, other.Path, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(this.Stream, other.Stream, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(this.Label, other.Label, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(string other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return this.Equals((CloudPath)other);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj is string)
+            {
+                return this.Equals(obj as string);
+            }
+
+            if (obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+
+            return this.Equals(obj as CloudPath);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 13;
+
+                hash = (hash * 7) + this.Type.GetHashCode();
+                hash = (hash * 7) + this.Label?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.Path?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.Stream?.GetHashCode() ?? 0;
+
+                return hash;
+            }
         }
 
         private static (CloudPathType type, string label, string path, string stream) ParseInternal(string path)

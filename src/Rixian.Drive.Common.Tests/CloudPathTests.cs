@@ -357,4 +357,19 @@ public class CloudPathTests
         var extension = CloudPath.HasExtension(fullPath);
         extension.Should().Be(expectedResult);
     }
+
+    [Theory]
+    [InlineData(@"/foo/bar.txt")]
+    [InlineData(@"C:/foo/bar.txt")]
+    [InlineData(@"/foo/bar.txt:baz")]
+    [InlineData(@"C:/foo/bar.txt:baz")]
+    public void Equality(string fullPath)
+    {
+        CloudPath path = fullPath;
+        path.Should().Be((CloudPath)fullPath);
+
+        path.Equals((string)fullPath).Should().BeTrue();
+        path.Equals((CloudPath)fullPath).Should().BeTrue();
+        path.Equals((object)fullPath).Should().BeTrue();
+    }
 }
