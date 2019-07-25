@@ -343,6 +343,7 @@ public class CloudPathTests
     [InlineData(@"/foo/bar", "bar")]
     [InlineData(@"/foo/", "")]
     [InlineData(@"/foo", "foo")]
+    [InlineData(@"/foo:abc", "foo")]
     public void GetFileName(string fullPath, string expectedFileName)
     {
         var extension = CloudPath.GetFileName(fullPath);

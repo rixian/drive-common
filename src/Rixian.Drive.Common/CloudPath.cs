@@ -535,6 +535,9 @@ namespace Rixian.Drive.Common
                 return null;
             }
 
+            var cp = new CloudPath(path);
+            path = cp.Path;
+
             var separatorIndex = path.LastIndexOf(DirectorySeparator);
             if (separatorIndex < 0)
             {
