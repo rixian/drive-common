@@ -210,6 +210,21 @@ public class CloudPathTests
     }
 
     [Theory]
+    [InlineData(@"\foo\bar.txt", null)]
+    [InlineData(@"   /foo/bar.txt   ", null)]
+    [InlineData(@"\foo\bar.txt:abcd", "abcd")]
+    [InlineData(@"   /foo/bar.txt:abcd   ", "abcd")]
+    [InlineData(@"C:\foo\bar.txt", null)]
+    [InlineData(@"C:\foo\bar.txt:abcd", "abcd")]
+    [InlineData(@"\\QQQ\foo\bar.txt", null)]
+    [InlineData(@"\\QQQ\foo\bar.txt:abcd", "abcd")]
+    public void GetStreamName(string fullPath, string expectedStreamName)
+    {
+        var streamName = CloudPath.GetStreamName(fullPath);
+        streamName.Should().Be(expectedStreamName);
+    }
+
+    [Theory]
     [InlineData(@"/foo/bar.txt", "/foo/bar.txt")]
     [InlineData(@"/foo/../bar.txt", "/bar.txt")]
     [InlineData(@"/foo/./bar.txt", "/foo/bar.txt")]

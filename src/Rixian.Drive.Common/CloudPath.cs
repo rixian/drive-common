@@ -29,6 +29,11 @@ namespace Rixian.Drive.Common
         public static readonly char PartitionSeparator = ':';
 
         /// <summary>
+        /// Stream seperator used in path.
+        /// </summary>
+        public static readonly char StreamSeparator = ':';
+
+        /// <summary>
         /// Characters that are not valid in the path.
         /// </summary>
         public static readonly char[] InvalidCharacters = new[] { '\\', ':', '?', '*', '[', ']' };
@@ -497,6 +502,9 @@ namespace Rixian.Drive.Common
                 return null;
             }
 
+            var cp = new CloudPath(path);
+            path = cp.Path;
+
             var periodIndex = path.LastIndexOf('.');
             if (periodIndex == -1)
             {
@@ -539,6 +547,21 @@ namespace Rixian.Drive.Common
             }
 
             return path.Substring(separatorIndex + 1, path.Length - separatorIndex - 1);
+        }
+
+        /// <summary>
+        /// Gets the name of the file stream on this path.
+        /// </summary>
+        /// <param name="path">The path to inspect.</param>
+        /// <returns>The stream name or null.</returns>
+        public static string GetStreamName(string path)
+        {
+            if (path == null)
+            {
+                return null;
+            }
+
+            return new CloudPath(path).Stream;
         }
 
         /// <summary>
@@ -755,13 +778,13 @@ namespace Rixian.Drive.Common
         /// <returns>The path string.</returns>
         public string ToString(bool includeStream)
         {
-            var stream = includeStream && !string.IsNullOrWhiteSpace(this.Stream) ? $":{this.Stream}" : null;
+            var stream = includeStream && !string.IsNullOrWhiteSpace(this.Stream) ? $"{StreamSeparator}{this.Stream}" : null;
             switch (this.Type)
             {
                 case CloudPathType.Share:
                     return $"//{this.Label}{this.Path}{stream}";
                 case CloudPathType.Partition:
-                    return $"{this.Label}:{this.Path}{stream}";
+                    return $"{this.Label}{PartitionSeparator}{this.Path}{stream}";
                 default:
                     return $"{this.Path}{stream}";
             }
@@ -1004,6 +1027,6 @@ namespace Rixian.Drive.Common
 
         private static string FormatShare(string label) => $"//{label}";
 
-        private static string FormatPartition(string label) => $"{label}:";
+        private static string FormatPartition(string label) => $"{label}{PartitionSeparator}";
     }
 }
