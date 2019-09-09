@@ -18,7 +18,7 @@ namespace Rixian.Drive.Common
         /// </summary>
         /// <param name="cloudPath">The path to navigate.</param>
         /// <returns>The path to the parent directory.</returns>
-        public static string GetParent(this CloudPath cloudPath)
+        public static CloudPath GetParent(this CloudPath cloudPath)
         {
             var path = cloudPath?.ToString();
             if (path == null)
@@ -129,7 +129,7 @@ namespace Rixian.Drive.Common
         /// <param name="cloudPath">The path to modify.</param>
         /// <param name="extension">The new extension.</param>
         /// <returns>The modified path with the new extension.</returns>
-        public static string ChangeExtension(this CloudPath cloudPath, string extension)
+        public static CloudPath ChangeExtension(this CloudPath cloudPath, string extension)
         {
             /*
              * On Windows-based desktop platforms, if path is null or an empty string (""), the path information is returned unmodified.
