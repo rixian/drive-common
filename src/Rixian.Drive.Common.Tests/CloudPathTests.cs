@@ -302,8 +302,8 @@ public class CloudPathTests
     }
 
     [Theory]
-    //[InlineData(@"C:/foo/bar.txt", "test", "C:/foo/bar.txt/test")]
-    //[InlineData(@"C:/", "test", "C:/test")]
+    [InlineData(@"C:/foo/bar.txt", "test", "C:/foo/bar.txt/test")]
+    [InlineData(@"C:/", "test", "C:/test")]
     [InlineData(@"C:/foo/bar", "test:aaa", "C:/foo/bar/test:aaa")]
     public void AppendPath_CloudPaths(string fullPath, string relativePath, string expectedPath)
     {
@@ -326,18 +326,6 @@ public class CloudPathTests
         CloudPath pathInfo = fullPath;
         pathInfo.ChangeExtension(extension).Should().Be(expectedPath);
     }
-
-    //[Theory]
-    //[InlineData(@"/foo/", "/foo")]
-    //[InlineData(@"/foo", null)]
-    //[InlineData(@"/foo/bar.txt", "/foo")]
-    //[InlineData(@"C:/foo/bar.txt", "C:/foo")]
-    //[InlineData(@"//share/foo/bar.txt", "//share/foo")]
-    //public void GetDirectoryName(string fullPath, string expectedPath)
-    //{
-    //    CloudPath pathInfo = fullPath;
-    //    pathInfo.GetDirectoryName().Should().Be(expectedPath);
-    //}
 
     [Theory]
     [InlineData(@"/foo/bar.txt", ".txt")]

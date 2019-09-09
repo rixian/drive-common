@@ -396,7 +396,7 @@ namespace Rixian.Drive.Common
         /// <summary>
         /// Checks if the path if formatted as a directory path (trailing '/').
         /// </summary>
-        /// <param name="cloudPath">The path to check.</param>
+        /// <param name="path">The path to check.</param>
         /// <returns>True if the path represents a directory, otherwise false.</returns>
         public static bool IsFormattedAsDirectory(string path)
         {
