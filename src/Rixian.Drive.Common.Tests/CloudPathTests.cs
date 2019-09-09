@@ -242,6 +242,45 @@ public class CloudPathTests
     }
 
     [Theory]
+    [InlineData(null, null)]
+    [InlineData(@"/foo", "/foo/")]
+    [InlineData(@"/foo/", "/foo/")]
+    [InlineData(@"C:/foo", "C:/foo/")]
+    [InlineData(@"//share/foo", "//share/foo/")]
+    [InlineData(@"/foo.txt", "/foo.txt/")]
+    public void NormalizeToDirectory(string fullPath, string expectedPath)
+    {
+        CloudPath path = fullPath;
+        path = path.NormalizeToDirectory();
+        path.Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(@"/foo.txt", "/foo.txt")]
+    [InlineData(@"C:/foo.txt", "C:/foo.txt")]
+    [InlineData(@"//share/foo.txt", "//share/foo.txt")]
+    [InlineData(@"/foo/", "/foo")]
+    [InlineData(@"/foo:aaa", "/foo:aaa")]
+    public void NormalizeToFile(string fullPath, string expectedPath)
+    {
+        CloudPath path = fullPath;
+        path = path.NormalizeToFile();
+        path.Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(@"/foo:aaa")]
+    [InlineData(@"C:/foo:aaa")]
+    [InlineData(@"//share/foo:aaa")]
+    public void NormalizeToDirectory_Errors(string fullPath)
+    {
+        CloudPath path = fullPath;
+
+        Assert.Throws<InvalidOperationException>(() => path.NormalizeToDirectory());
+    }
+
+    [Theory]
     [InlineData(@"/foo/bar.txt", "/foo/bar.txt")]
     [InlineData(@"/foo/../bar.txt", "/bar.txt")]
     [InlineData(@"/foo/./bar.txt", "/foo/bar.txt")]

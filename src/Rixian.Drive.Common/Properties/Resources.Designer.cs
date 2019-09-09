@@ -88,6 +88,15 @@ namespace Rixian.Drive.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot normalize a path with stream..
+        /// </summary>
+        internal static string PathNoramizedWithStreamExceptionMessage {
+            get {
+                return ResourceManager.GetString("PathNoramizedWithStreamExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The path must not be null..
         /// </summary>
         internal static string PathNullExceptionMessage {

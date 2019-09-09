@@ -45,8 +45,18 @@ namespace Rixian.Drive.Common
         /// </summary>
         /// <param name="cloudPath">The path to normalize.</param>
         /// <returns>The normalized path.</returns>
-        public static string NormalizeToDirectory(this CloudPath cloudPath)
+        public static CloudPath NormalizeToDirectory(this CloudPath cloudPath)
         {
+            if (cloudPath == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(cloudPath.Stream))
+            {
+                throw new InvalidOperationException(Properties.Resources.PathNoramizedWithStreamExceptionMessage);
+            }
+
             var path = cloudPath?.ToString();
             if (path == null)
             {
@@ -71,8 +81,13 @@ namespace Rixian.Drive.Common
         /// </summary>
         /// <param name="cloudPath">The path to normalize.</param>
         /// <returns>The normalized path.</returns>
-        public static string NormalizeToFile(this CloudPath cloudPath)
+        public static CloudPath NormalizeToFile(this CloudPath cloudPath)
         {
+            if (cloudPath == null)
+            {
+                return null;
+            }
+
             var path = cloudPath?.ToString();
             if (path == null)
             {
