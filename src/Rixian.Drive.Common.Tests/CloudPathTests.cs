@@ -364,6 +364,21 @@ public class CloudPathTests
     }
 
     [Theory]
+    [InlineData(@"C:/foo/bar.txt", "/foo/bar.txt")]
+    [InlineData(@"C:/foo/bar/", "/foo/bar/")]
+    [InlineData(@"C:/", "/")]
+    [InlineData(@"C:", "")]
+    [InlineData(@"//share/foo/bar.txt", "/foo/bar.txt")]
+    [InlineData(@"//share/foo/bar/", "/foo/bar/")]
+    [InlineData(@"//share/", "/")]
+    [InlineData(@"//share", "")]
+    public void GetPathBody(string fullPath, string expectedRoot)
+    {
+        var root = CloudPath.GetPathBody(fullPath);
+        root.Should().Be(expectedRoot);
+    }
+
+    [Theory]
     [InlineData(@"/foo/bar.txt", true)]
     [InlineData(@"/foo/bar.abcdefghijklmnop", true)]
     [InlineData(@"/foo/bar.test.txt", true)]

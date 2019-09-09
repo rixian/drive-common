@@ -19,6 +19,11 @@ namespace Rixian.Drive.Common
         public static readonly string RelativeRoot = "/";
 
         /// <summary>
+        /// Prefix used for shre paths.
+        /// </summary>
+        public static readonly string SharePrefix = "//";
+
+        /// <summary>
         /// Directory seperator used in the path.
         /// </summary>
         public static readonly char DirectorySeparator = '/';
@@ -785,7 +790,7 @@ namespace Rixian.Drive.Common
             switch (this.Type)
             {
                 case CloudPathType.Share:
-                    return $"//{this.Label}{this.Path}{stream}";
+                    return $"{SharePrefix}{this.Label}{this.Path}{stream}";
                 case CloudPathType.Partition:
                     return $"{this.Label}{PartitionSeparator}{this.Path}{stream}";
                 default:
@@ -1028,7 +1033,7 @@ namespace Rixian.Drive.Common
             return normalizedPath;
         }
 
-        private static string FormatShare(string label) => $"//{label}";
+        private static string FormatShare(string label) => $"{SharePrefix}{label}";
 
         private static string FormatPartition(string label) => $"{label}{PartitionSeparator}";
     }
