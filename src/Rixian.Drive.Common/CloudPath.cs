@@ -360,6 +360,53 @@ namespace Rixian.Drive.Common
         }
 
         /// <summary>
+        /// Combines multiple path segments into a single path.
+        /// </summary>
+        /// <param name="basePath">The base path.</param>
+        /// <param name="relativePath">The relative path to append.</param>
+        /// <returns>The full path.</returns>
+        public static CloudPath Combine(CloudPath basePath, string relativePath)
+        {
+            /*
+             * paths should be an array of the parts of the path to combine. If the one of the subsequent paths is an absolute path, then the combine operation resets starting with that absolute path, discarding all previous combined paths.
+             *
+             * Zero-length strings are omitted from the combined path.
+             *
+             * The parameters are not parsed if they have white space.
+             *
+             * Not all invalid characters for directory and file names are interpreted as unacceptable by the Combine method, because you can use these characters for search wildcard characters. For example, while Path.Combine("c:\\", "*.txt") might be invalid if you were to create a file from it, it is valid as a search string. It is therefore successfully interpreted by the Combine method.
+             */
+
+            if (basePath == null)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                return basePath;
+            }
+
+            CloudPath combinedPath = Combine(new[] { basePath.Path, relativePath });
+            if (combinedPath == null)
+            {
+                return null;
+            }
+
+            CloudPath outputPath = combinedPath;
+            if (basePath.Type == CloudPathType.Partition)
+            {
+                outputPath = outputPath.WithPartition(basePath.Label);
+            }
+            else if (basePath.Type == CloudPathType.Share)
+            {
+                outputPath = outputPath.WithShare(basePath.Label);
+            }
+
+            return outputPath;
+        }
+
+        /// <summary>
         /// Normalizes the path, including hierarchies and relative paths.
         /// </summary>
         /// <param name="path">The path to normalize.</param>

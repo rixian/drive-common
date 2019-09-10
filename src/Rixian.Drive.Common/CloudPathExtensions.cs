@@ -169,31 +169,28 @@ namespace Rixian.Drive.Common
         /// </summary>
         /// <param name="cloudPath">The input path.</param>
         /// <returns>The path to the directory.</returns>
-        public static CloudPath GetDirectoryName(this CloudPath cloudPath)
+        public static string GetDirectoryName(this CloudPath cloudPath)
         {
-            /*
-             * Directory information for path, or null if path denotes a root directory or is null. Returns Empty if path does not contain directory information.
-             *
-             * In most cases, the string returned by this method consists of all characters in the path up to but not including the last DirectorySeparatorChar or AltDirectorySeparatorChar.
-             * If the path consists of a root directory, such as "c:\", null is returned. Note that this method does not support paths using "file:".
-             * Because the returned path does not include the DirectorySeparatorChar or AltDirectorySeparatorChar, passing the returned path back into the GetDirectoryName method will result
-             * in the truncation of one folder level per subsequent call on the result string. For example, passing the path "C:\Directory\SubDirectory\test.txt" into the GetDirectoryName
-             * method will return "C:\Directory\SubDirectory". Passing that string, "C:\Directory\SubDirectory", into GetDirectoryName will result in "C:\Directory".
-             */
+            string path = cloudPath?.ToString();
 
-            var path = cloudPath?.ToString();
             if (path == null)
             {
                 return null;
             }
 
-            var separatorIndex = path.LastIndexOf(CloudPath.DirectorySeparator);
-            if (separatorIndex <= 0)
+            if (path == "/")
             {
-                return null;
+                throw new InvalidOperationException(Properties.Resources.NoParentOfRootExceptionMessage);
             }
 
-            return path.Substring(0, separatorIndex);
+            var lookaheadCount = path.Length;
+
+            var index = path.LastIndexOf(CloudPath.DirectorySeparator, lookaheadCount - 1, lookaheadCount);
+
+            path = path.Remove(index + 1);
+
+            var dirName = GetFileNameInternal(path);
+            return dirName;
         }
 
         /// <summary>
@@ -247,20 +244,7 @@ namespace Rixian.Drive.Common
                 return null;
             }
 
-            var path = cloudPath.Path;
-
-            var separatorIndex = path.LastIndexOf(CloudPath.DirectorySeparator);
-            if (separatorIndex < 0)
-            {
-                return path;
-            }
-
-            if (separatorIndex == path.Length - 1)
-            {
-                return string.Empty;
-            }
-
-            return path.Substring(separatorIndex + 1, path.Length - separatorIndex - 1);
+            return GetFileNameInternal(cloudPath.Path);
         }
 
         /// <summary>
@@ -424,6 +408,26 @@ namespace Rixian.Drive.Common
             }
 
             return new CloudPath(CloudPathType.Share, label, cloudPath.Path, cloudPath.Stream);
+        }
+
+        private static string GetFileNameInternal(string path)
+        {
+            /*
+            The characters after the last directory character in path. If the last character of path is a directory or volume separator character, this method returns Empty. If path is null, this method returns null.
+            */
+
+            var separatorIndex = path.LastIndexOf(CloudPath.DirectorySeparator);
+            if (separatorIndex < 0)
+            {
+                return path;
+            }
+
+            if (separatorIndex == path.Length - 1)
+            {
+                return string.Empty;
+            }
+
+            return path.Substring(separatorIndex + 1, path.Length - separatorIndex - 1);
         }
     }
 }
