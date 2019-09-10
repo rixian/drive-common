@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using Rixian.Drive.Common;
 using Xunit;
@@ -24,6 +25,21 @@ public class CloudPathTests
         pathInfo.Should().NotBeNull();
         pathInfo.Path.Should().Be(expectedPath);
         pathInfo.Stream.Should().Be(expectedStream);
+    }
+
+    [Theory]
+    [InlineData(@"/foo/bar.txt", new[] { "foo", "bar.txt" })]
+    [InlineData(@"/foo/bar.txt:aaa", new[] { "foo", "bar.txt" })]
+    [InlineData(@"C:/foo/bar.txt", new[] { "foo", "bar.txt" })]
+    [InlineData(@"C:/foo/bar.txt:aaa", new[] { "foo", "bar.txt" })]
+    [InlineData(@"//share/foo/bar.txt", new[] { "foo", "bar.txt" })]
+    [InlineData(@"//share/foo/bar.txt:aaa", new[] { "foo", "bar.txt" })]
+    public void GetPathSegments(string fullPath, string[] expectedSegments)
+    {
+        CloudPath pathInfo = fullPath;
+        IReadOnlyList<string> segments = pathInfo.GetPathSegments();
+        segments.Should().NotBeNull();
+        segments.Should().Contain(expectedSegments);
     }
 
     [Theory]

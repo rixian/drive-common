@@ -169,7 +169,7 @@ namespace Rixian.Drive.Common
         /// </summary>
         /// <param name="cloudPath">The input path.</param>
         /// <returns>The path to the directory.</returns>
-        public static string GetDirectoryName(this CloudPath cloudPath)
+        public static CloudPath GetDirectoryName(this CloudPath cloudPath)
         {
             /*
              * Directory information for path, or null if path denotes a root directory or is null. Returns Empty if path does not contain directory information.
@@ -298,7 +298,7 @@ namespace Rixian.Drive.Common
         /// <returns>The path segments.</returns>
         public static IReadOnlyList<string> GetPathSegments(this CloudPath cloudPath)
         {
-            return GetPathSegments(cloudPath?.Path);
+            return CloudPath.GetPathSegments(cloudPath?.Path);
         }
 
         /// <summary>
