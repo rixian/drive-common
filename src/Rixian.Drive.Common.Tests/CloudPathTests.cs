@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using Rixian.Drive.Common;
 using Xunit;
@@ -9,30 +10,46 @@ using Xunit;
 public class CloudPathTests
 {
     [Theory]
-    [InlineData(@"\foo\bar.txt", "/foo/bar.txt", null)]
-    [InlineData(@"   /foo/bar.txt   ", "/foo/bar.txt", null)]
+    [InlineData(@"\foo\bar.txt", "/foo/bar.txt", "")]
+    [InlineData(@"   /foo/bar.txt   ", "/foo/bar.txt", "")]
     [InlineData(@"\foo\bar.txt:abcd", "/foo/bar.txt", "abcd")]
     [InlineData(@"   /foo/bar.txt:abcd   ", "/foo/bar.txt", "abcd")]
-    [InlineData(@"C:\foo\bar.txt", "/foo/bar.txt", null)]
+    [InlineData(@"C:\foo\bar.txt", "/foo/bar.txt", "")]
     [InlineData(@"C:\foo\bar.txt:abcd", "/foo/bar.txt", "abcd")]
-    [InlineData(@"\\QQQ\foo\bar.txt", "/foo/bar.txt", null)]
+    [InlineData(@"\\QQQ\foo\bar.txt", "/foo/bar.txt", "")]
     [InlineData(@"\\QQQ\foo\bar.txt:abcd", "/foo/bar.txt", "abcd")]
+    [InlineData(@"test:aaa", "/test", "aaa")]
     public void ParsePath(string fullPath, string expectedPath, string expectedStream)
     {
-        var pathInfo = new CloudPath(fullPath);
+        var pathInfo = CloudPath.TryParse(fullPath);
         pathInfo.Should().NotBeNull();
         pathInfo.Path.Should().Be(expectedPath);
         pathInfo.Stream.Should().Be(expectedStream);
     }
 
     [Theory]
-    [InlineData(@"\foo\bar.txt", null, "/foo/bar.txt", null, "/foo/bar.txt")]
-    [InlineData(@"   /foo/bar.txt   ", null, "/foo/bar.txt", null, "/foo/bar.txt")]
-    [InlineData(@"\foo\bar.txt:abcd", null, "/foo/bar.txt", "abcd", "/foo/bar.txt:abcd")]
-    [InlineData(@"   /foo/bar.txt:abcd   ", null, "/foo/bar.txt", "abcd", "/foo/bar.txt:abcd")]
-    [InlineData(@"C:\foo\bar.txt", "C", "/foo/bar.txt", null, "C:/foo/bar.txt")]
+    [InlineData(@"/foo/bar.txt", new[] { "foo", "bar.txt" })]
+    [InlineData(@"/foo/bar.txt:aaa", new[] { "foo", "bar.txt" })]
+    [InlineData(@"C:/foo/bar.txt", new[] { "foo", "bar.txt" })]
+    [InlineData(@"C:/foo/bar.txt:aaa", new[] { "foo", "bar.txt" })]
+    [InlineData(@"//share/foo/bar.txt", new[] { "foo", "bar.txt" })]
+    [InlineData(@"//share/foo/bar.txt:aaa", new[] { "foo", "bar.txt" })]
+    public void GetPathSegments(string fullPath, string[] expectedSegments)
+    {
+        CloudPath pathInfo = fullPath;
+        IReadOnlyList<string> segments = pathInfo.GetPathSegments();
+        segments.Should().NotBeNull();
+        segments.Should().Contain(expectedSegments);
+    }
+
+    [Theory]
+    [InlineData(@"\foo\bar.txt", "", "/foo/bar.txt", "", "/foo/bar.txt")]
+    [InlineData(@"   /foo/bar.txt   ", "", "/foo/bar.txt", "", "/foo/bar.txt")]
+    [InlineData(@"\foo\bar.txt:abcd", "", "/foo/bar.txt", "abcd", "/foo/bar.txt:abcd")]
+    [InlineData(@"   /foo/bar.txt:abcd   ", "", "/foo/bar.txt", "abcd", "/foo/bar.txt:abcd")]
+    [InlineData(@"C:\foo\bar.txt", "C", "/foo/bar.txt", "", "C:/foo/bar.txt")]
     [InlineData(@"C:\foo\bar.txt:abcd", "C", "/foo/bar.txt", "abcd", "C:/foo/bar.txt:abcd")]
-    [InlineData(@"\\QQQ\foo\bar.txt", "QQQ", "/foo/bar.txt", null, "//QQQ/foo/bar.txt")]
+    [InlineData(@"\\QQQ\foo\bar.txt", "QQQ", "/foo/bar.txt", "", "//QQQ/foo/bar.txt")]
     [InlineData(@"\\QQQ\foo\bar.txt:abcd", "QQQ", "/foo/bar.txt", "abcd", "//QQQ/foo/bar.txt:abcd")]
     public void ImplicitParsePath(string fullPath, string expectedLabel, string expectedPath, string expectedStream, string expectedFull)
     {
@@ -64,8 +81,8 @@ public class CloudPathTests
     [InlineData(@"//share", "share")]
     public void GetPathLabel(string fullPath, string expectedLabel)
     {
-        var label = CloudPath.GetPathLabel(fullPath);
-        label.Should().Be(expectedLabel);
+        CloudPath pathInfo = fullPath;
+        pathInfo.Label.Should().Be(expectedLabel);
     }
 
     [Theory]
@@ -210,6 +227,21 @@ public class CloudPathTests
     }
 
     [Theory]
+    [InlineData(@"\foo\bar.txt", "")]
+    [InlineData(@"   /foo/bar.txt   ", "")]
+    [InlineData(@"\foo\bar.txt:abcd", "abcd")]
+    [InlineData(@"   /foo/bar.txt:abcd   ", "abcd")]
+    [InlineData(@"C:\foo\bar.txt", "")]
+    [InlineData(@"C:\foo\bar.txt:abcd", "abcd")]
+    [InlineData(@"\\QQQ\foo\bar.txt", "")]
+    [InlineData(@"\\QQQ\foo\bar.txt:abcd", "abcd")]
+    public void GetStreamName(string fullPath, string expectedStreamName)
+    {
+        CloudPath pathInfo = fullPath;
+        pathInfo.Stream.Should().Be(expectedStreamName);
+    }
+
+    [Theory]
     [InlineData(@"/foo/bar.txt", "/foo/bar.txt")]
     [InlineData(@"/foo/../bar.txt", "/bar.txt")]
     [InlineData(@"/foo/./bar.txt", "/foo/bar.txt")]
@@ -220,9 +252,48 @@ public class CloudPathTests
     [InlineData(@"/foo/./././././bar/", "/foo/bar/")]
     public void NormalizePath(string fullPath, string expectedPath)
     {
-        var pathInfo = CloudPath.NormalizePath(fullPath);
-        pathInfo.Should().NotBeNull();
-        pathInfo.Should().Be(expectedPath);
+        var path = CloudPath.NormalizePath(fullPath);
+        path.Should().NotBeNull();
+        path.Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(@"/foo", "/foo/")]
+    [InlineData(@"/foo/", "/foo/")]
+    [InlineData(@"C:/foo", "C:/foo/")]
+    [InlineData(@"//share/foo", "//share/foo/")]
+    [InlineData(@"/foo.txt", "/foo.txt/")]
+    public void NormalizeToDirectory(string fullPath, string expectedPath)
+    {
+        CloudPath path = fullPath;
+        path = path.NormalizeToDirectory();
+        path.Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(@"/foo.txt", "/foo.txt")]
+    [InlineData(@"C:/foo.txt", "C:/foo.txt")]
+    [InlineData(@"//share/foo.txt", "//share/foo.txt")]
+    [InlineData(@"/foo/", "/foo")]
+    [InlineData(@"/foo:aaa", "/foo:aaa")]
+    public void NormalizeToFile(string fullPath, string expectedPath)
+    {
+        CloudPath path = fullPath;
+        path = path.NormalizeToFile();
+        path.Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(@"/foo:aaa")]
+    [InlineData(@"C:/foo:aaa")]
+    [InlineData(@"//share/foo:aaa")]
+    public void NormalizeToDirectory_Errors(string fullPath)
+    {
+        CloudPath path = fullPath;
+
+        Assert.Throws<InvalidOperationException>(() => path.NormalizeToDirectory());
     }
 
     [Theory]
@@ -246,9 +317,9 @@ public class CloudPathTests
     [InlineData(@"/", true)]
     public void IsRoot(string fullPath, bool isRoot)
     {
-        var pathInfo = fullPath;
+        CloudPath pathInfo = fullPath;
         pathInfo.Should().NotBeNull();
-        CloudPath.IsRoot(pathInfo).Should().Be(isRoot);
+        pathInfo.IsRootPath.Should().Be(isRoot);
     }
 
     [Theory]
@@ -259,7 +330,8 @@ public class CloudPathTests
     [InlineData("/A/B/C/D/E/F/G/H/I/J/", "/A/B/C/D/E/F/G/H/I/")]
     public void GetParent(string fullPath, string expectedPath)
     {
-        var pathInfo = CloudPath.GetParent(fullPath);
+        CloudPath pathInfo = fullPath;
+        pathInfo = pathInfo.GetParent();
         pathInfo.Should().NotBeNull();
         pathInfo.Should().Be(expectedPath);
     }
@@ -268,8 +340,8 @@ public class CloudPathTests
     [InlineData("/")]
     public void GetParent_Root(string fullPath)
     {
-        var pathInfo = fullPath;
-        Action act = () => CloudPath.GetParent(pathInfo);
+        CloudPath pathInfo = fullPath;
+        Action act = () => pathInfo.GetParent();
 
         act.Should().Throw<InvalidOperationException>();
     }
@@ -277,11 +349,22 @@ public class CloudPathTests
     [Theory]
     [InlineData(@"/foo/bar.txt", "test", "/foo/bar.txt/test")]
     [InlineData(@"/", "test", "/test")]
-    public void AppendPath(string fullPath, string relativePath, string expectedPath)
+    public void AppendPath_Strings(string fullPath, string relativePath, string expectedPath)
     {
         var pathInfo = CloudPath.Combine(fullPath, relativePath);
         pathInfo.Should().NotBeNull();
-        pathInfo.Should().Be(expectedPath);
+        pathInfo.ToString().Should().Be(expectedPath);
+    }
+
+    [Theory]
+    [InlineData(@"C:/foo/bar.txt", "test", "C:/foo/bar.txt/test")]
+    [InlineData(@"C:/", "test", "C:/test")]
+    [InlineData(@"C:/foo/bar", "test:aaa", "C:/foo/bar/test:aaa")]
+    public void AppendPath_CloudPaths(string fullPath, string relativePath, string expectedPath)
+    {
+        var pathInfo = CloudPath.Combine((CloudPath)fullPath, (CloudPath)relativePath);
+        pathInfo.Should().NotBeNull();
+        pathInfo.ToString().Should().Be(expectedPath);
     }
 
     [Theory]
@@ -295,20 +378,8 @@ public class CloudPathTests
     [InlineData(@"/foo/bar", null, "/foo/bar")]
     public void ChangeExtension(string fullPath, string extension, string expectedPath)
     {
-        var path = CloudPath.ChangeExtension(fullPath, extension);
-        path.Should().Be(expectedPath);
-    }
-
-    [Theory]
-    [InlineData(@"/foo/", "/foo")]
-    [InlineData(@"/foo", null)]
-    [InlineData(@"/foo/bar.txt", "/foo")]
-    [InlineData(@"C:/foo/bar.txt", "C:/foo")]
-    [InlineData(@"//share/foo/bar.txt", "//share/foo")]
-    public void GetDirectoryName(string fullPath, string expectedPath)
-    {
-        var path = CloudPath.GetDirectoryName(fullPath);
-        path.Should().Be(expectedPath);
+        CloudPath pathInfo = fullPath;
+        pathInfo.ChangeExtension(extension).Should().Be(expectedPath);
     }
 
     [Theory]
@@ -318,8 +389,8 @@ public class CloudPathTests
     [InlineData(@"/foo.bar/baz.test.txt", ".txt")]
     public void GetExtension(string fullPath, string expectedExtension)
     {
-        var extension = CloudPath.GetExtension(fullPath);
-        extension.Should().Be(expectedExtension);
+        CloudPath pathInfo = fullPath;
+        pathInfo.GetExtension().Should().Be(expectedExtension);
     }
 
     [Theory]
@@ -328,10 +399,30 @@ public class CloudPathTests
     [InlineData(@"/foo/bar", "bar")]
     [InlineData(@"/foo/", "")]
     [InlineData(@"/foo", "foo")]
+    [InlineData(@"/foo:abc", "foo")]
     public void GetFileName(string fullPath, string expectedFileName)
     {
-        var extension = CloudPath.GetFileName(fullPath);
-        extension.Should().Be(expectedFileName);
+        CloudPath pathInfo = fullPath;
+        pathInfo.GetFileName().Should().Be(expectedFileName);
+    }
+
+    [Theory]
+    [InlineData(@"/foo/", "foo")]
+    [InlineData(@"/foo/bar.txt", "foo")]
+    [InlineData(@"/foo/bar.txt:aaa", "foo")]
+    [InlineData(@"/foo/bar.abcdefghijklmnop", "foo")]
+    [InlineData(@"C:/foo/", "foo")]
+    [InlineData(@"C:/foo/bar.txt", "foo")]
+    [InlineData(@"C:/foo/bar.txt:aaa", "foo")]
+    [InlineData(@"C:/foo/bar.abcdefghijklmnop", "foo")]
+    [InlineData(@"//share/foo/", "foo")]
+    [InlineData(@"//share/foo/bar.txt", "foo")]
+    [InlineData(@"//share/foo/bar.txt:aaa", "foo")]
+    [InlineData(@"//share/foo/bar.abcdefghijklmnop", "foo")]
+    public void GetDirectoryName(string fullPath, string expectedDirectoryName)
+    {
+        CloudPath pathInfo = fullPath;
+        pathInfo.GetDirectoryName().Should().Be(expectedDirectoryName);
     }
 
     [Theory]
@@ -341,10 +432,25 @@ public class CloudPathTests
     [InlineData(@"//share/foo/bar.txt", "//share")]
     [InlineData(@"//share/", "//share")]
     [InlineData(@"//share", "//share")]
-    public void GetPathRoot(string fullPath, string expectedRoot)
+    public void GetFormattedLabel(string fullPath, string expectedRoot)
     {
-        var root = CloudPath.GetPathRoot(fullPath);
-        root.Should().Be(expectedRoot);
+        CloudPath pathInfo = fullPath;
+        pathInfo.FormattedLabel.Should().Be(expectedRoot);
+    }
+
+    [Theory]
+    [InlineData(@"C:/foo/bar.txt", "/foo/bar.txt")]
+    [InlineData(@"C:/foo/bar/", "/foo/bar/")]
+    [InlineData(@"C:/", "/")]
+    [InlineData(@"C:", "/")]
+    [InlineData(@"//share/foo/bar.txt", "/foo/bar.txt")]
+    [InlineData(@"//share/foo/bar/", "/foo/bar/")]
+    [InlineData(@"//share/", "/")]
+    [InlineData(@"//share", "/")]
+    public void GetPathBody(string fullPath, string expectedRoot)
+    {
+        CloudPath pathInfo = fullPath;
+        pathInfo.Path.Should().Be(expectedRoot);
     }
 
     [Theory]
@@ -354,8 +460,8 @@ public class CloudPathTests
     [InlineData(@"/foo.bar/baz.test.txt", true)]
     public void HasExtension(string fullPath, bool expectedResult)
     {
-        var extension = CloudPath.HasExtension(fullPath);
-        extension.Should().Be(expectedResult);
+        CloudPath pathInfo = fullPath;
+        pathInfo.HasExtension().Should().Be(expectedResult);
     }
 
     [Theory]

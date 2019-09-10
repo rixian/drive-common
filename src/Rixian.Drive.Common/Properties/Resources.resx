@@ -126,6 +126,9 @@
   <data name="PathAlreadyConatinsStreamExceptionMessage" xml:space="preserve">
     <value>Unable to add a stream to a path that already contains a stream.</value>
   </data>
+  <data name="PathNoramizedWithStreamExceptionMessage" xml:space="preserve">
+    <value>Cannot normalize a path with stream.</value>
+  </data>
   <data name="PathNullExceptionMessage" xml:space="preserve">
     <value>The path must not be null.</value>
   </data>

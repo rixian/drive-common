@@ -6,23 +6,39 @@
 [![Build Status](https://dev.azure.com/rixian/Cloud%20Platform/_apis/build/status/rixian.drive-common?branchName=master)](https://dev.azure.com/rixian/Cloud%20Platform/_build/latest?definitionId=85&branchName=master)
 [![codecov](https://codecov.io/gh/rixian/drive-common/branch/master/graph/badge.svg)](https://codecov.io/gh/rixian/drive-common)
 
-## Features
+## Overview
 
-* Follow the best and simplest patterns of build, pack and test with dotnet CLI.
-* Static analyzers: [FxCop](https://docs.microsoft.com/en-us/visualstudio/code-quality/fxcop-analyzers?view=vs-2019) and [StyleCop](https://github.com/DotNetAnalyzers/StyleCopAnalyzers)
-* Read-only source tree (builds to top-level bin/obj folders)
-* Auto-versioning (via [Nerdbank.GitVersioning](https://github.com/aarnott/nerdbank.gitversioning))
-* Azure Pipeline via YAML with all dependencies declared for long-term serviceability.
-* Testing on .NET Framework, multiple .NET Core versions
-* Testing on Windows, Linux and OSX
-* Code coverage published to Azure Pipelines
-* Code coverage published to codecov.io so GitHub PRs get code coverage results added as a PR comment
+* `CloudPath` class used to represent file paths agnostic of existing devices.
 
-## Consumption
+Install the latest NuGet package from: https://www.nuget.org/packages/Rixian.Drive.Common
 
-Once you've expanded this template for your own use, you should **run the `Expand-Template.ps1` script** to customize the template for your own project.
+## Cloud Path
 
-Further customize your repo by:
+`CloudPath` is an immutable class intended to represent a path and it's various components. You can find the specification here: [CloudPath Spec](docs/cloudpath_spec.md)
 
-1. Verify the license is suitable for your goal as it appears in the LICENSE and stylecop.json files and the Directory.Build.props file's `PackageLicenseExpression` property.
-2. Reset or replace the badges at the top of this file.
+### Examples
+
+To get an idea of what CloudPath is and how it looks here are some examples to start off:
+
+* `C:/images/foo.png`
+* `//shared/images/foo.png`
+* `C:/images/foo.png:metadata`
+* `/foo/../images/foo.png`
+
+There are four components to a cloud path:
+
+* Label - The name given to the partition or share.
+* Path - The path itself.
+* Stream - The name of a specific stream in the file.
+* Type - The type of path: Partition, Share, or None
+
+Lets use the examples and show how they are interpreted:
+
+| Full Path                          | Label   | Path              | Stream     | Type        |
+|------------------------------------|---------|-------------------|------------|-------------|
+| `C:/images/foo.png`                | `C`     | `/images/foo.png` |            | `partition` |
+| `//share:/images/foo.png`          | `share` | `/images/foo.png` |            | `share`     |
+| `C:/images/foo.png:metadata`       | `C`     | `/images/foo.png` | `metadata` | `partition` |
+| `/foo/../images/foo.png`           |         | `/images/foo.png` |            | `none`      |
+
+More info to come soon...
