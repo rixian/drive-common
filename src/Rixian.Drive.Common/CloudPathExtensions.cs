@@ -183,11 +183,9 @@ namespace Rixian.Drive.Common
                 throw new InvalidOperationException(Properties.Resources.NoParentOfRootExceptionMessage);
             }
 
-            var lookaheadCount = path.Length;
+            var index = path.LastIndexOf(CloudPath.DirectorySeparator);
 
-            var index = path.LastIndexOf(CloudPath.DirectorySeparator, lookaheadCount - 1, lookaheadCount);
-
-            path = path.Remove(index + 1);
+            path = path.Remove(index);
 
             var dirName = GetFileNameInternal(path);
             return dirName;

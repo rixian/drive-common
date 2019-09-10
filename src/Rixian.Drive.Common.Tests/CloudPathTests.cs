@@ -407,6 +407,25 @@ public class CloudPathTests
     }
 
     [Theory]
+    [InlineData(@"/foo/", "foo")]
+    [InlineData(@"/foo/bar.txt", "foo")]
+    [InlineData(@"/foo/bar.txt:aaa", "foo")]
+    [InlineData(@"/foo/bar.abcdefghijklmnop", "foo")]
+    [InlineData(@"C:/foo/", "foo")]
+    [InlineData(@"C:/foo/bar.txt", "foo")]
+    [InlineData(@"C:/foo/bar.txt:aaa", "foo")]
+    [InlineData(@"C:/foo/bar.abcdefghijklmnop", "foo")]
+    [InlineData(@"//share/foo/", "foo")]
+    [InlineData(@"//share/foo/bar.txt", "foo")]
+    [InlineData(@"//share/foo/bar.txt:aaa", "foo")]
+    [InlineData(@"//share/foo/bar.abcdefghijklmnop", "foo")]
+    public void GetDirectoryName(string fullPath, string expectedDirectoryName)
+    {
+        CloudPath pathInfo = fullPath;
+        pathInfo.GetDirectoryName().Should().Be(expectedDirectoryName);
+    }
+
+    [Theory]
     [InlineData(@"C:/foo/bar.txt", "C:")]
     [InlineData(@"C:/", "C:")]
     [InlineData(@"C:", "C:")]
